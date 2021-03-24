@@ -86,6 +86,16 @@ Build the docker image
 cd container-Yolov4
 docker build . -t <yolov4>
 ```
+Create docker container 
+```
+docker run -u 0 \
+--gpus all -it \
+--shm-size 8G \
+-v ~/Documents:/workspace \
+-v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro \
+yolov4:latest
+```
+
 ## Prepare the COCO format dataset
 ### 1. Create dataset.yaml
 COCO128 is a small tutorial dataset composed of the first 128 images in COCO train2017. These same 128 images are used for both training and validation to verify our training pipeline is capable of overfitting. data/coco128.yaml, shown below, is the dataset configuration file that defines 1) an optional download command/URL for auto-downloading, 2) a path to a directory of training images (or path to a *.txt file with a list of training images), 3) the same for our validation images, 4) the number of classes, 5) a list of class names:
