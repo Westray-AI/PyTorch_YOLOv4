@@ -30,7 +30,7 @@ def load_classes(path):
 
 def test(data,
          weights=None,
-         batch_size=16,
+         batch_size=8,
          imgsz=640,
          conf_thres=0.001,
          iou_thres=0.6,  # for NMS
