@@ -80,12 +80,58 @@ This is PyTorch implementation of [YOLOv4](https://github.com/AlexeyAB/darknet) 
 | (+BoF) | 640 | **51.0%** | **69.7%** | **55.5%** | **33.3%** | **56.2%** | **65.5%** |  | [weights](https://drive.google.com/file/d/1lVmSqItSKywg6yk1qiCvgOYw55O03Qgj/view?usp=sharing) |
 |  |  |  |  |  |  |  |
 
-## Requirements
+## Setup develpoment environment  
+Build the docker image
+```
+cd container-Yolov4
+docker build . -t <yolov4>
+```
+## Prepare the COCO format dataset
+### 1. Create dataset.yaml
+COCO128 is a small tutorial dataset composed of the first 128 images in COCO train2017. These same 128 images are used for both training and validation to verify our training pipeline is capable of overfitting. data/coco128.yaml, shown below, is the dataset configuration file that defines 1) an optional download command/URL for auto-downloading, 2) a path to a directory of training images (or path to a *.txt file with a list of training images), 3) the same for our validation images, 4) the number of classes, 5) a list of class names:
 
 ```
-pip install -r requirements.txt
+# download command/URL (optional)
+download: https://github.com/ultralytics/yolov5/releases/download/v1.0/coco128.zip
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: ../coco128/images/train2017/
+val: ../coco128/images/train2017/
+
+# number of classes
+nc: 80
+
+# class names
+names: ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
+        'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
+        'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+        'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
+        'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+        'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+        'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 
+        'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 
+        'teddy bear', 'hair drier', 'toothbrush']
 ```
-※ For running Mish models, please install https://github.com/thomasbrandon/mish-cuda
+### 2. Create Labels
+
+After using a tool like CVAT, makesense.ai or Labelbox to label your images, export your labels to YOLO format, with one *.txt file per image (if no objects in image, no *.txt file is required). The *.txt file specifications are:
+
+    - One row per object
+    - Each row is class x_center y_center width height format.
+    - Box coordinates must be in normalized xywh format (from 0 - 1). If your boxes are in pixels, divide x_center and width by image width, and y_center and height by image height.
+    - Class numbers are zero-indexed (start from 0).
+
+### 3. Organize Directories
+
+Organize your train and val images and labels according to the example below. In this example we assume /coco128 is next to the /yolov3 directory. YOLOv3 locates labels automatically for each image by replacing the last instance of /images/ in the images directory with /labels/. For example:
+
+coco/images/train2017/000000109622.jpg  # image
+coco/labels/train2017/000000109622.txt  # label
+
+### 4. The dataprocessing jupyter script 
+To create a COCO format dateset, you can run preprocess_data.ipynb. 
+
+reference: https://github.com/ultralytics/yolov3/wiki/Train-Custom-Data#2-create-labels
 
 ## Training
 
@@ -98,6 +144,15 @@ python train.py --device 0 --batch-size 16 --img 640 640 --data coco.yaml --cfg 
 ```
 python test.py --img 640 --conf 0.001 --batch 8 --device 0 --data coco.yaml --cfg cfg/yolov4-pacsp.cfg --weights weights/yolov4-pacsp.pt
 ```
+
+## Cuda out of memory issue
+If you have RuntimeError: CUDA out of memory. You could try the solutions below:
+### During training
+Run "nvidia-smi", then train again
+### During testing 
+Use the argument "--notest", then it will only test final epoch. 
+https://github.com/WongKinYiu/PyTorch_YOLOv4/issues/164
+
 
 ## Citation
 
